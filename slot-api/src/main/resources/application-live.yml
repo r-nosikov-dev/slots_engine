@@ -1,0 +1,18 @@
+# Enable with: --spring.profiles.active=live
+# Real money: math tools off, no top-up, no client seed, operator wallet over HTTP.
+slot:
+  mode: LIVE
+  math-enabled: false
+  studio-enabled: false
+  allow-client-seed: false
+  allow-top-up: false
+  wallet:
+    provider: HTTP
+    http:
+      base-url: ${OPERATOR_WALLET_URL:}
+      auth-token: ${OPERATOR_WALLET_TOKEN:}
+      debit-path: /wallet/debit
+      credit-path: /wallet/credit
+      rollback-path: /wallet/rollback
+      balance-path: /wallet/balance/{playerId}
+      timeout-ms: 3000

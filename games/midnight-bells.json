@@ -1,0 +1,26 @@
+{
+  "id": "midnight-bells",
+  "name": "Midnight Bells",
+  "template": "classic-20",
+  "theme": "cathedral",
+  "math": {
+    "targetRtp": 0.9600,
+    "volatility": "MEDIUM",
+    "maxWinMultiplier": 2500
+  },
+  "core": {
+    "freeSpinsMultiplier": 2,
+    "freeSpinsAwards": { "3": 8, "4": 12, "5": 16 },
+    "buyBonusCostMultiplier": 80,
+    "buyBonusScatters": 3
+  },
+  "reels": {
+    "baseWeights": [
+      { "WILD": 0, "SCATTER": 2, "H1": 2, "H2": 2, "H3": 3, "A": 4, "K": 4, "Q": 5, "J": 5, "TEN": 6, "NINE": 6 },
+      { "WILD": 1, "SCATTER": 1, "H1": 2, "H2": 2, "H3": 3, "A": 4, "K": 4, "Q": 5, "J": 5, "TEN": 6, "NINE": 6 },
+      { "WILD": 2, "SCATTER": 2, "H1": 2, "H2": 3, "H3": 3, "A": 4, "K": 4, "Q": 4, "J": 5, "TEN": 5, "NINE": 6 },
+      { "WILD": 1, "SCATTER": 1, "H1": 2, "H2": 2, "H3": 3, "A": 4, "K": 4, "Q": 5, "J": 5, "TEN": 6, "NINE": 6 },
+      { "WILD": 1, "SCATTER": 2, "H1": 2, "H2": 2, "H3": 3, "A": 4, "K": 4, "Q": 5, "J": 5, "TEN": 6, "NINE": 6 }
+    ]
+  }
+}

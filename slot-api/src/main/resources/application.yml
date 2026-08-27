@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: slots-engine
+
+slot:
+  mode: SIMULATION
+  math-enabled: true
+  studio-enabled: true
+  allow-client-seed: true
+  allow-top-up: true
+  default-credits: 100000
+  games-dir: ./games
+  currency: CREDITS
+  wallet:
+    provider: SIMULATED
+    http:
+      base-url: ""
+      debit-path: /wallet/debit
+      credit-path: /wallet/credit
+      rollback-path: /wallet/rollback
+      balance-path: /wallet/balance/{playerId}
+      auth-header: Authorization
+      auth-token: ""
+      timeout-ms: 3000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+springdoc:
+  api-docs:
+    path: /api/docs
+  swagger-ui:
+    path: /swagger
+    operations-sorter: method
+
+logging:
+  level:
+    com.slotengine: INFO

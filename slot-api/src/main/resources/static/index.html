@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slot Engine — math core</title>
+  <style>
+    :root {
+      --felt: #10261c;
+      --felt-2: #1a3a2a;
+      --gold: #d4b15f;
+      --gold-2: #f0d78c;
+      --ink: #f4efe4;
+      --mute: #b7c4b8;
+      --loss: #6b3a3a;
+      --win: #7dffb3;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(1200px 500px at 50% -10%, #2d5a40 0%, transparent 55%),
+        repeating-linear-gradient(90deg, #0c1f16 0 12px, #0e2419 12px 24px);
+    }
+    header {
+      padding: 28px 24px 8px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--gold-2);
+      font-size: 22px;
+    }
+    header p { color: var(--mute); margin: 8px 0 0; font-size: 14px; }
+    main {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 16px 20px 48px;
+      display: grid;
+      gap: 18px;
+    }
+    .panel {
+      background: linear-gradient(180deg, rgba(26, 58, 42, 0.95), rgba(12, 31, 22, 0.95));
+      border: 1px solid rgba(212, 177, 95, 0.35);
+      border-radius: 16px;
+      padding: 16px 18px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    label { font-size: 12px; color: var(--mute); text-transform: uppercase; letter-spacing: 0.08em; }
+    select, input, button {
+      font: inherit;
+      border-radius: 8px;
+      border: 1px solid rgba(212,177,95,0.45);
+      background: #0b1a13;
+      color: var(--ink);
+      padding: 8px 10px;
+    }
+    button {
+      background: linear-gradient(180deg, var(--gold-2), var(--gold));
+      color: #1a1408;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    button.secondary {
+      background: transparent;
+      color: var(--gold-2);
+    }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .stat { background: #0b1a13; border-radius: 10px; padding: 10px 12px; }
+    .stat b { display: block; font-size: 20px; color: var(--gold-2); }
+    .reels {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      background: #07110c;
+      padding: 14px;
+      border-radius: 14px;
+      border: 2px solid var(--gold);
+    }
+    .reel { display: grid; gap: 8px; }
+    .cell {
+      aspect-ratio: 1;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #243226, #141c16);
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      border: 1px solid #3d5a45;
+    }
+    .cell.win { border-color: var(--gold-2); box-shadow: 0 0 0 2px rgba(240,215,140,0.5); color: var(--win); }
+    .cell.wild { color: #ffd36a; }
+    .cell.scatter { color: #9ad7ff; }
+    .log {
+      max-height: 220px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.45;
+      color: var(--mute);
+      white-space: pre-wrap;
+    }
+    .winline { color: var(--win); }
+    @media (max-width: 720px) {
+      .stats { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Slot Engine</h1>
+    <p>Math core · JSON game definition · REST for the frontend</p>
+    <p id="mode-badge" style="margin-top:10px;letter-spacing:0.14em;text-transform:uppercase;font-size:12px;color:#d4b15f">—</p>
+  </header>
+  <main>
+    <section class="panel">
+      <div class="row">
+        <div>
+          <label>Game</label><br />
+          <select id="game"></select>
+        </div>
+        <div>
+          <label>Bet</label><br />
+          <input id="bet" type="number" min="1" value="20" />
+        </div>
+        <div>
+          <label>Mode</label><br />
+          <select id="mode">
+            <option value="NORMAL">NORMAL</option>
+            <option value="ANTE">ANTE</option>
+            <option value="BUY_BONUS">BUY BONUS</option>
+          </select>
+        </div>
+        <button id="spin">Spin</button>
+        <button id="simulate" class="secondary">RTP 20k</button>
+        <a href="/swagger" style="color:#f0d78c;margin-left:auto;font-size:13px">OpenAPI</a>
+      </div>
+    </section>
+
+    <section class="panel" id="math-panel">
+      <label>Math and core</label>
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Template</label><br />
+          <select id="template"></select>
+        </div>
+        <div>
+          <label>New id</label><br />
+          <input id="new-id" placeholder="my-slot" />
+        </div>
+        <button id="create-template" class="secondary" type="button">Create</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <div>
+          <label>Max win ×</label><br />
+          <input id="max-win" type="number" min="1" />
+        </div>
+        <div>
+          <label>FS multiplier</label><br />
+          <input id="fs-mult" type="number" min="1" />
+        </div>
+        <div>
+          <label>Buy bonus ×</label><br />
+          <input id="buy-cost" type="number" min="1" />
+        </div>
+        <button id="apply-math" class="secondary" type="button">Apply</button>
+        <button id="preview-math" class="secondary" type="button">Preview 5k</button>
+      </div>
+    </section>
+
+    <section class="panel stats">
+      <div class="stat"><span>Balance</span><b id="balance">—</b></div>
+      <div class="stat"><span>Win</span><b id="win">0</b></div>
+      <div class="stat"><span>Round</span><b id="round">—</b></div>
+      <div class="stat"><span>Game</span><b id="meta">—</b></div>
+    </section>
+
+    <section class="panel">
+      <div class="reels" id="reels"></div>
+    </section>
+
+    <section class="panel">
+      <label>Round / simulation log</label>
+      <div class="log" id="log">Select a game and press Spin.</div>
+    </section>
+  </main>
+  <script>
+    const PALETTE = {
+      WILD: "wild", SCATTER: "scatter"
+    };
+    let session = null;
+    let currentGame = null;
+    let runtime = { mathEnabled: true, allowTopUp: true, operatingMode: "SIMULATION" };
+
+    const $ = (id) => document.getElementById(id);
+
+    function renderWindow(window, wins = []) {
+      const hot = new Set();
+      wins.forEach(w => (w.positions || []).forEach(p => hot.add(p.reel + ":" + p.row)));
+      const cols = (window[0] || []).map((_, reel) => window.map(row => row[reel]));
+      $("reels").style.gridTemplateColumns = `repeat(${cols.length || 5}, 1fr)`;
+      $("reels").innerHTML = cols.map((col, reel) =>
+        `<div class="reel">${col.map((sym, row) => {
+          const cls = ["cell", PALETTE[sym] || "", hot.has(reel + ":" + row) ? "win" : ""].join(" ");
+          return `<div class="${cls}">${sym}</div>`;
+        }).join("")}</div>`
+      ).join("");
+    }
+
+    async function api(path, opts) {
+      const res = await fetch(path, Object.assign({
+        headers: { "Content-Type": "application/json" }
+      }, opts));
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.message || res.statusText);
+      return body;
+    }
+
+    async function loadGames() {
+      runtime = await api("/api/v1/runtime");
+      $("mode-badge").textContent = runtime.operatingMode + " · wallet " + runtime.walletProvider;
+      $("simulate").style.display = runtime.mathEnabled ? "" : "none";
+      $("math-panel").style.display = runtime.studioEnabled === false ? "none" : "";
+      const templates = await api("/api/v1/templates");
+      $("template").innerHTML = templates.map(t =>
+        `<option value="${t.id}">${t.id} — ${t.description}</option>`
+      ).join("");
+      const games = await api("/api/v1/games");
+      $("game").innerHTML = games.map(g =>
+        `<option value="${g.id}">${g.name} · ${g.grid} · RTP ${g.targetRtp}</option>`
+      ).join("");
+      await openSession();
+    }
+
+    async function openSession() {
+      const gameId = $("game").value;
+      currentGame = await api("/api/v1/games/" + gameId);
+      const body = { playerId: "demo-player", gameId };
+      if (runtime.allowTopUp) body.credits = 100000;
+      session = await api("/api/v1/sessions", {
+        method: "POST",
+        body: JSON.stringify(body)
+      });
+      $("balance").textContent = session.balance;
+      $("meta").textContent = currentGame.grid;
+      $("bet").value = currentGame.paylines > 0 ? currentGame.paylines : 1;
+      const rows = Number(currentGame.grid.split("x")[1] || 3);
+      const reels = Number(currentGame.grid.split("x")[0] || 5);
+      renderWindow(Array.from({ length: rows }, () => Array(reels).fill("•")));
+      $("log").textContent = `${currentGame.name}\n${currentGame.evaluation}` +
+        (currentGame.ways ? ` ${currentGame.ways} ways` : ` ${currentGame.paylines} lines`) +
+        `\nvol ${currentGame.volatility} · max ${currentGame.maxWin}`;
+      try {
+        const math = await api("/api/v1/games/" + gameId + "/math");
+        $("max-win").value = math.math.maxWinMultiplier;
+        $("fs-mult").value = math.core.freeSpinsMultiplier || "";
+        $("buy-cost").value = math.core.buyBonusCostMultiplier || "";
+      } catch (_) { /* ignore */ }
+    }
+
+    function describe(round) {
+      const lines = [];
+      lines.push(`round ${round.roundId.slice(0, 8)}  seed=${round.seed}  bet=${round.totalBet} charged=${round.charged}`);
+      lines.push(`totalWin=${round.totalWin}${round.maxWinCapped ? "  MAX WIN CAP" : ""}`);
+      (round.triggers || []).forEach(t => lines.push(`feature ${t.type} ${t.symbolId} x${t.count} +${t.awardedSpins} FS`));
+      (round.spins || []).forEach(s => {
+        lines.push(`  [${s.index}] ${s.phase}  x${s.multiplier}  win=${s.winAmount}`);
+        (s.wins || []).forEach(w => lines.push(`      ${w.type} ${w.symbolId} ${w.ofAKind}  ${w.amount}`));
+      });
+      return lines.join("\n");
+    }
+
+    async function spin() {
+      if (!session) return;
+      $("spin").disabled = true;
+      try {
+        const round = await api(`/api/v1/sessions/${session.sessionId}/spin`, {
+          method: "POST",
+          body: JSON.stringify({
+            bet: Number($("bet").value),
+            mode: $("mode").value
+          })
+        });
+        const last = round.spins.filter(s => s.window && s.window.length).pop();
+        if (last) renderWindow(last.window, last.wins || []);
+        $("balance").textContent = round.balance;
+        $("win").textContent = round.totalWin;
+        $("round").textContent = round.roundId.slice(0, 8);
+        $("log").innerHTML = `<span class="${round.totalWin > 0 ? "winline" : ""}">${describe(round)}</span>`;
+        session.balance = round.balance;
+      } catch (err) {
+        $("log").textContent = err.message;
+      } finally {
+        $("spin").disabled = false;
+      }
+    }
+
+    async function simulate() {
+      if (!runtime.mathEnabled) {
+        $("log").textContent = "RTP simulation is disabled in this process.";
+        return;
+      }
+      $("simulate").disabled = true;
+      $("log").textContent = "Simulating 20,000 rounds…";
+      try {
+        const report = await api("/api/v1/math/simulate", {
+          method: "POST",
+          body: JSON.stringify({
+            gameId: $("game").value,
+            spins: 20000,
+            bet: Number($("bet").value),
+            mode: $("mode").value,
+            seed: 1
+          })
+        });
+        $("log").textContent = Object.entries(report)
+          .map(([k, v]) => k + " = " + (typeof v === "object" ? JSON.stringify(v) : v))
+          .join("\n");
+      } catch (err) {
+        $("log").textContent = err.message;
+      } finally {
+        $("simulate").disabled = false;
+      }
+    }
+
+    function mathOverlay() {
+      const overlay = { core: {}, math: {} };
+      const maxWin = Number($("max-win").value);
+      const fs = Number($("fs-mult").value);
+      const buy = Number($("buy-cost").value);
+      if (maxWin > 0) {
+        overlay.core.maxWinMultiplier = maxWin;
+        overlay.math.maxWinMultiplier = maxWin;
+      }
+      if (fs > 0) overlay.core.freeSpinsMultiplier = fs;
+      if (buy > 0) overlay.core.buyBonusCostMultiplier = buy;
+      return overlay;
+    }
+
+    async function refreshGames(selectId) {
+      const games = await api("/api/v1/games");
+      $("game").innerHTML = games.map(g =>
+        `<option value="${g.id}">${g.name} · ${g.grid} · RTP ${g.targetRtp}</option>`
+      ).join("");
+      if (selectId) $("game").value = selectId;
+    }
+
+    async function createFromTemplate() {
+      const id = ($("new-id").value || "").trim();
+      if (!id) { $("log").textContent = "Enter an id for the new game"; return; }
+      try {
+        const created = await api("/api/v1/games/from-template", {
+          method: "POST",
+          body: JSON.stringify({ id, template: $("template").value, name: id })
+        });
+        await refreshGames(created.id);
+        await openSession();
+        $("log").textContent = "Created " + created.id + " from template " + $("template").value;
+      } catch (err) {
+        $("log").textContent = err.message;
+      }
+    }
+
+    async function applyMath() {
+      try {
+        const snap = await api("/api/v1/games/" + $("game").value + "/math", {
+          method: "PUT",
+          body: JSON.stringify(mathOverlay())
+        });
+        $("log").textContent = "Core updated: FS×" + (snap.core.freeSpinsMultiplier || "—")
+          + "  max " + snap.math.maxWinMultiplier + "x"
+          + "  buy " + (snap.core.buyBonusCostMultiplier || "—");
+        await openSession();
+      } catch (err) {
+        $("log").textContent = err.message;
+      }
+    }
+
+    async function previewMath() {
+      $("log").textContent = "Preview 5,000 rounds…";
+      try {
+        const report = await api("/api/v1/games/" + $("game").value + "/math/preview?spins=5000", {
+          method: "POST",
+          body: JSON.stringify(mathOverlay())
+        });
+        $("log").textContent = "preview (not saved)\n"
+          + Object.entries(report.simulation || {})
+            .map(([k, v]) => k + " = " + (typeof v === "object" ? JSON.stringify(v) : v))
+            .join("\n");
+      } catch (err) {
+        $("log").textContent = err.message;
+      }
+    }
+
+    $("game").addEventListener("change", openSession);
+    $("spin").addEventListener("click", spin);
+    $("simulate").addEventListener("click", simulate);
+    $("create-template").addEventListener("click", createFromTemplate);
+    $("apply-math").addEventListener("click", applyMath);
+    $("preview-math").addEventListener("click", previewMath);
+    loadGames().catch(err => $("log").textContent = err.message);
+  </script>
+</body>
+</html>

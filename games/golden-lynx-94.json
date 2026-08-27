@@ -1,0 +1,14 @@
+{
+  "id": "golden-lynx-94",
+  "name": "Golden Lynx 94%",
+  "extendsId": "golden-lynx",
+  "math": {
+    "targetRtp": 0.9400,
+    "volatility": "HIGH",
+    "maxWinMultiplier": 4000
+  },
+  "core": {
+    "freeSpinsMultiplier": 2,
+    "buyBonusCostMultiplier": 80
+  }
+}

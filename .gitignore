@@ -1,0 +1,40 @@
+# Gradle
+.gradle/
+.gradle-home/
+**/build/
+
+# Java / Kotlin
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+*.war
+*.log
+.kotlin/
+out/
+bin/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.project
+.classpath
+.settings/
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local / secrets — never commit real tokens
+.env
+.env.*
+!.env.example
+local.properties
+application-local.yml
+application-local.yaml
+*.pem
+*.p12
+*.jks
